@@ -11,7 +11,6 @@ if (sessionStorage.getItem("products") != null) {
     fetch("http://localhost:3000/api/products")
         .then(res => res.json())
         .then(data => {
-            console.log(data);
             sessionStorage.setItem("products", JSON.stringify(data));
             display(data);
         })
@@ -50,29 +49,26 @@ function display(data) {
 let cart = [];
 const addBtn = document.getElementById("addToCart");
 
-
 function addToCart() {
     let quantity = document.getElementById("quantity").value;
-    //Pour sélectionner la couleur
     let color = document.getElementById("colors").selectedIndex;
     color = document.getElementsByTagName("option")[color].value;
 
-    //"S'il n'y a aucune commande dans la session"
     if (localStorage.getItem("cart") == null) {
         let order = {id: id, color: color, quantity:quantity};
         cart.push(order);
         localStorage.setItem("cart", JSON.stringify(cart));
     } else {
-    //S'il y a déjà une commande dans la session    
         let localCart = JSON.parse(localStorage.getItem("cart"));
         let productNotInCart = true;
         for (let product of localCart) {
-        if (product.id === id && product.color === color) {
-            product.quantity = Number(product.quantity) + Number(quantity);
-            localStorage.setItem("cart", JSON.stringify(localCart));
-            productNotInCart = false;
-            break;
-        }};
+            if (product.id == id && product.color == color) {
+                product.quantity = Number(product.quantity) + Number(quantity);
+                localStorage.setItem("cart", JSON.stringify(localCart));
+                productNotInCart = false;
+                break;
+            }
+        }
         if (productNotInCart) {
             let order = {id: id, color: color, quantity:quantity};
             localCart.push(order);
