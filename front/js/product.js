@@ -54,7 +54,9 @@ function addToCart() {
     let color = document.getElementById("colors").selectedIndex;
     color = document.getElementsByTagName("option")[color].value;
 
-    if (localStorage.getItem("cart") == null) {
+    if (Number(quantity) == 0) {
+        alert("Veuillez sélectionner une quantité valide")
+    } else if (localStorage.getItem("cart") == null) {
         let order = {id: id, color: color, quantity:quantity};
         cart.push(order);
         localStorage.setItem("cart", JSON.stringify(cart));
