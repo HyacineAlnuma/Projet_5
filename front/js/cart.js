@@ -1,10 +1,18 @@
 let cart = JSON.parse(localStorage.getItem("cart"));
 const cartSection = document.getElementById("cart__items");
 
-let productPrices = [];
-let productQuantity = [];
 const totalPrice = document.getElementById("totalPrice");
 const totalQuantity = document.getElementById("totalQuantity");
+
+/**
+ * Les deux tableaux suivants vont permettre de stocker les prix et quantités des produits du panier pour les additionner à l'aide de fonctions afin d'avoir des totaux.
+ */
+let productPrices = [];
+let productQuantity = [];
+
+/**
+ * Les deux tableaux suivants vont permettre de stocker les inputs permettant de modifier la quantité d'un produit et les boutons permettant de supprimer un produit.
+ */
 let quantityInputs = [];
 let deleteBtn = [];
 
@@ -18,6 +26,9 @@ const contactForm = document.getElementById("contact_form");
 const orderBtn = document.getElementById("order");
 let submitCart = [];
 
+/**
+ * Une nouvelle fois, n va ici effectuer une requête seulement si les infos ne pas déjà présente dans le stockage de session.
+ */
 if (sessionStorage.getItem("products") != null) {
     let data = sessionStorage.getItem("products");
     data = JSON.parse(data);
@@ -30,6 +41,12 @@ if (sessionStorage.getItem("products") != null) {
         .catch(err => console.log("error", err))
 }
 
+/**
+ * Cette fonction va permettre d'afficher les produits du "cart" dans la page panier.
+ * Nous verrons plus bas la raison pour laquelle nous réintialisons les quatre tableaux au début de la fonction.
+ * Ici nous parcourons les produits du "cart" ainsi que les produits issus des infos fournis par l'API. Si une concordance dans l'id de deux produits s'établit entre les deux listes, les infos du produit en questions sont récupérées afin d'être affichées.
+ * 
+ */
 function display(cart) {
     data = JSON.parse(sessionStorage.getItem("products"));
     cart = JSON.parse(localStorage.getItem("cart"));
@@ -63,7 +80,7 @@ function display(cart) {
                 itemColor.innerHTML = item.color;
                 const itemPrice = document.createElement("p");
                 itemPrice.classList.add("cart__item__content__price");
-                itemPrice.innerHTML = product.price * item.quantity;
+                itemPrice.innerHTML = product.price * item.quantity + '€';
                 productPrices.push(Number((product.price * item.quantity)));
                 itemArticle.appendChild(itemContent);
                 itemContent.appendChild(itemDescription);
@@ -106,8 +123,28 @@ function display(cart) {
     sumArticles();
 }
 
+/** 
+ * Cette fonction va permettre de créer un tableau contenant uniquement les id des produits du "cart", puisque le tableau de produits envoyé via la requête POST ne doit contenir que les id.
+ */
+function createSubmitCart() {
+    for (let product of cart) {
+        submitCart.push(product.id);
+    }
+}
+
+
 display(cart);
 
+createSubmitCart();
+
+/**
+ * Cette fonction permet de supprimer un produit depuis cette page, en cliquant sur le bouton "supprimer".
+ * Dans la fonction display, à chaque fois que l'on a créé un bouton "supprimer", nous l'avons push dans un tableau nommé "deleteBtn".
+ * L'indice d'un bouton "supprimer" dans ce tableau va donc être le même que l'indice du produit dans le cart auquel il est rattaché.
+ * Donc lorsque l'on clique sur le bouton "supprimer" d'indice i, le produit d'indice i est supprimé du cart. 
+ * Il faut donc ensuite restocker le cart mis à jour dans le stockage local, supprimer le contenu html de la section du panier puis appeler la fonction display() afin que le panier puisse s'afficher de nouveau.
+ * Il faut donc réintialiser les tableaux au début de la fonction display afin que les indices correspondent toujours.
+ */
 function deleteProduct() {
     for (let i in deleteBtn) {
         deleteBtn[i].addEventListener("click", function() {
@@ -120,6 +157,9 @@ function deleteProduct() {
     }
 }
 
+/**
+ * Cette fonction fonctionne sur le même principe que le fonction deleteProduct(), sauf qu'ici elle sert à modifier la quantité d'un produit.
+ */
 function changeQuantity() {
     for (let i in quantityInputs) {
         quantityInputs[i].addEventListener("change", function() {
@@ -132,6 +172,9 @@ function changeQuantity() {
     }
 }
 
+/**
+ * Les deux fonctions suivantes servent à totaliser le prix et la quantité des produits du panier.
+ */
 function sumPrices() {
     let sumPrice = 0;
     for (let i = 0; i < productPrices.length; i++) {
@@ -148,14 +191,11 @@ function sumArticles() {
     totalQuantity.innerHTML = sumQuantity;
 }
 
-function createSubmitCart() {
-    for (let product of cart) {
-        submitCart.push(product.id);
-    }
-}
-
-createSubmitCart();
-
+/**
+ * Le code suivant va permettre de vérifier ce qui est saisie dans les champs du formulaire.
+ * En cas d'erreur un message s'affiche, chaque champ a un message d'erreur distinct.
+ * Les champs « prénom », « nom » et « ville » ne peuvent contenir que des lettres, le champ « adresse » ne peut contenir que des lettres et des chiffre, le champ « email » doit contenir un @.
+ */
 for (let input of contactForm) {
     input.addEventListener("input", function(e) {
         switch (this.name) {
@@ -218,6 +258,17 @@ for (let input of contactForm) {
     })
 }
 
+/**
+ * L'évènement submit suivant va permettre d'envoyer le formulaire sous certaines conditions.
+ * Tout d'abord on créer un tableau "error".
+ * S'il y a une erreur dans l'un des champs du formulaire, on push dans le tableau un message d'erreur.
+ * Si le tableau est vide, c'est donc qu'il n'y a aucune erreur dans le formulaire, on peut donc effectuer la requête POST.
+ * On créer donc un objet contenant un objet contact, contenant lui même les informations saisies par l'utilisateur dans le formulaire, ainsi qu'un tableau contenant les id des produits du panier.
+ * Avant d'effectuer la requête on vérifie que : contact soit bien un objet et qu'il n'est pas vide, submitCart soit bien un tableau et qu'il n'est pas vide.
+ * Une fois la requête passée, on met un attribut onclick sur le bouton commander afin d'effectuer une redirection vers la page de confirmation. On met dans l'URL du href le numéro de commande que l'on a récupérer avec la requête POST.
+ * Si le tableau error contient un/des élément(s), c'est donc qu'il y a eu une ou plusieurs erreur dans la saisie des champs du formulaire, on n'effectue donc pas la requête et on affiche en alerte le tableau error, qui contient donc les messages d'erreur.
+ * error.join("\n") permet juste d'ajouter un saut de ligne entre les messages d'erreur.
+ */
 contactForm.addEventListener("submit", function(e) {
     e.preventDefault();
     let error = [];
@@ -268,7 +319,6 @@ contactForm.addEventListener("submit", function(e) {
             })
             .then(res => res.json())
             .then(value => {
-                console.log(value.orderId);
                 orderBtn.setAttribute('onclick', `location.href='./confirmation.html?id=${value.orderId}';`)
             })
             .catch(err => console.log("error", err))
