@@ -1,23 +1,10 @@
-const items = document.getElementById("items");
-
 /**
- * Le code suivant va permettre de requêter l'API afin d'en récupérer les informations, ainsi que de mettre ces dernière en stockage de session.
- * Dans le "if" on va vérifier si les infos ne sont pas déjà stockées et, le cas échéant, effectuer une requête.
- * Dans le "else", c'est donc si les infos sont déjà stockées, on va donc les parser afin de pouvoir les utiliser.
- * Dans les 2 cas, on va appliquer la fonction render() à ces infos.
+ * Ici on importe la fonction fetchData qui retourne les informations reçues de la requête afin de les utiliser dans la fonction display.
  */
-if (sessionStorage.getItem("products") == null) {
-    fetch("http://localhost:3000/api/products")
-        .then(res => res.json())
-        .then(data => {
-            sessionStorage.setItem("products", JSON.stringify(data));
-            render(data);
-        })
-        .catch(err => console.log("error", err))
-} else {
-    data = JSON.parse(sessionStorage.getItem("products"));
-    render(data);
-}
+import {fetchData} from "./module-fetch.js";
+const data = fetchData();
+
+const items = document.getElementById("items");
 
 /**
  * Cette fonction va permettre d'afficher les produits sur la page d'accueil à partir des infos de l'API.
@@ -46,5 +33,7 @@ function render(data) {
         cardSofaArticle.appendChild(cardSofaDescription);
     }
 }
+
+render(data);
 
 

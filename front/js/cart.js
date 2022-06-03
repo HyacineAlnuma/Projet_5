@@ -1,3 +1,9 @@
+/**
+ * Ici on importe la fonction fetchData qui retourne les informations reçues de la requête afin de les utiliser dans la fonction display.
+ */
+import {fetchData} from "./module-fetch.js";
+const data = fetchData();
+
 let cart = JSON.parse(localStorage.getItem("cart"));
 const cartSection = document.getElementById("cart__items");
 
@@ -27,28 +33,12 @@ const orderBtn = document.getElementById("order");
 let submitCart = [];
 
 /**
- * Une nouvelle fois, n va ici effectuer une requête seulement si les infos ne pas déjà présente dans le stockage de session.
- */
-if (sessionStorage.getItem("products") != null) {
-    let data = sessionStorage.getItem("products");
-    data = JSON.parse(data);
-} else {
-    fetch("http://localhost:3000/api/products")
-        .then(res => res.json())
-        .then(data => {
-            sessionStorage.setItem("products", JSON.stringify(data));
-        })
-        .catch(err => console.log("error", err))
-}
-
-/**
  * Cette fonction va permettre d'afficher les produits du "cart" dans la page panier.
- * Nous verrons plus bas la raison pour laquelle nous réintialisons les quatre tableaux au début de la fonction.
+ * La raison pour laquelle les quatre tableaux sont réinitialisés au début de la fonction sera détaillé plus bas.
  * Ici nous parcourons les produits du "cart" ainsi que les produits issus des infos fournis par l'API. Si une concordance dans l'id de deux produits s'établit entre les deux listes, les infos du produit en questions sont récupérées afin d'être affichées.
  * 
  */
 function display(cart) {
-    data = JSON.parse(sessionStorage.getItem("products"));
     cart = JSON.parse(localStorage.getItem("cart"));
     quantityInputs = [];
     deleteBtn = [];
@@ -134,7 +124,6 @@ function createSubmitCart() {
 
 
 display(cart);
-
 createSubmitCart();
 
 /**
@@ -150,6 +139,7 @@ function deleteProduct() {
         deleteBtn[i].addEventListener("click", function() {
             cart = JSON.parse(localStorage.getItem("cart"));
             cart.splice(i, 1);
+            submitCart.splice(i, 1);
             localStorage.setItem("cart", JSON.stringify(cart));
             cartSection.innerHTML = "";
             display(cart);
@@ -265,7 +255,7 @@ for (let input of contactForm) {
  * Si le tableau est vide, c'est donc qu'il n'y a aucune erreur dans le formulaire, on peut donc effectuer la requête POST.
  * On créer donc un objet contenant un objet contact, contenant lui même les informations saisies par l'utilisateur dans le formulaire, ainsi qu'un tableau contenant les id des produits du panier.
  * Avant d'effectuer la requête on vérifie que : contact soit bien un objet et qu'il n'est pas vide, submitCart soit bien un tableau et qu'il n'est pas vide.
- * Une fois la requête passée, on met un attribut onclick sur le bouton commander afin d'effectuer une redirection vers la page de confirmation. On met dans l'URL du href le numéro de commande que l'on a récupérer avec la requête POST.
+ * Une fois la requête passée, on met un attribut onclick sur le bouton commander afin d'effectuer une redirection vers la page de confirmation. On met dans l'URL du href le numéro de commande que l'on a récupéré avec la requête POST.
  * Si le tableau error contient un/des élément(s), c'est donc qu'il y a eu une ou plusieurs erreur dans la saisie des champs du formulaire, on n'effectue donc pas la requête et on affiche en alerte le tableau error, qui contient donc les messages d'erreur.
  * error.join("\n") permet juste d'ajouter un saut de ligne entre les messages d'erreur.
  */
@@ -308,7 +298,7 @@ contactForm.addEventListener("submit", function(e) {
             },
             products: submitCart
         };
-        if (typeof contact === "object" && Array.isArray(submitCart) && submitCart !== null && contact !== null) {
+        if (typeof contact === "object" && Array.isArray(submitCart) && submitCart.length > 0 && contact !== null) {
             fetch("http://localhost:3000/api/products/order", {
                 method: "POST",
                 headers: {
@@ -319,7 +309,7 @@ contactForm.addEventListener("submit", function(e) {
             })
             .then(res => res.json())
             .then(value => {
-                orderBtn.setAttribute('onclick', `location.href='./confirmation.html?id=${value.orderId}';`)
+                window.location.href = `./confirmation.html?id=${value.orderId}`
             })
             .catch(err => console.log("error", err))
         }

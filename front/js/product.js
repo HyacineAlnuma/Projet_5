@@ -10,54 +10,43 @@ const addBtn = document.getElementById("addToCart");
 let cart = [];
 
 /**
- * Tout comme dans script.js, on va ici effectuer une requête seulement si les infos ne pas déjà présente dans le stockage de session.
+ * On effectue une requête conernant le produit spécifique de la page en passant l'id dans l'URL de la requête
  */
-if (sessionStorage.getItem("products") != null) {
-    let data = sessionStorage.getItem("products");
-    data = JSON.parse(data);
-    display(data);
-} else {
-    fetch("http://localhost:3000/api/products")
-        .then(res => res.json())
-        .then(data => {
-            sessionStorage.setItem("products", JSON.stringify(data));
-            display(data);
-        })
-        .catch(err => console.log("error", err))
-}
+
+fetch(`http://localhost:3000/api/products/${id}`)
+    .then(res => res.json())
+    .then(data => {
+        display(data);
+    })
+    .catch(err => console.log("error", err))
 
 /**
  * Cette fonction va permettre d'afficher le produits ainsi que ses détails.
- * On cherche ici une concordance entre id d'un produit de la liste que nous fournit l'API avec l'id du produit en question.
  */
 function display(data) {
-    for (let product of data) {
-        if (product._id == id) {
-            const sofaImage = document.createElement("img");
-            sofaImage.setAttribute('src', `${product.imageUrl}`);
-            sofaImage.setAttribute('alt', `${product.altTxt}`);
-            itemImg[0].appendChild(sofaImage);
+    const sofaImage = document.createElement("img");
+    sofaImage.setAttribute('src', `${data.imageUrl}`);
+    sofaImage.setAttribute('alt', `${data.altTxt}`);
+    itemImg[0].appendChild(sofaImage);
 
-            const sofaName = document.getElementById("title");
-            sofaName.innerHTML = product.name;
+    const sofaName = document.getElementById("title");
+    sofaName.innerHTML = data.name;
 
-            const sofaPrice = document.getElementById("price");
-            sofaPrice.innerHTML = product.price;
+    const sofaPrice = document.getElementById("price");
+    sofaPrice.innerHTML = data.price;
 
-            const sofaDescription = document.getElementById("description");
-            sofaDescription.innerHTML = product.description;
+    const sofaDescription = document.getElementById("description");
+    sofaDescription.innerHTML = data.description;
 
-            for (let color of product.colors) {
-                const colorOption = document.createElement("option");
-                const selectColor = document.getElementById("colors");
-                colorOption.innerHTML = color;
-                colorOption.setAttribute('value', `${color}`);
-                selectColor.appendChild(colorOption);
-            }
-            break;
-        }
+    for (let color of data.colors) {
+        const colorOption = document.createElement("option");
+        const selectColor = document.getElementById("colors");
+        colorOption.innerHTML = color;
+        colorOption.setAttribute('value', `${color}`);
+        selectColor.appendChild(colorOption);
     }
 }
+
 
 /**
  * Cette fonction va permettre d'ajouter un produit au panier.
